@@ -1,13 +1,24 @@
-#include<iostream>
+#include <SFML/Graphics.hpp>
+#include <iostream>
+int main()
+{
+    sf::RenderWindow window(sf::VideoMode(200, 200), "SFML works!");
+    sf::CircleShape shape(100.f);
+    shape.setFillColor(sf::Color::Green);
+    std::cout << "Thanks for viewing my code!"<< window.isOpen();
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
 
-int main() {
-    // Just for checking which C++ version we using 
-    if (__cplusplus == 202101L) std::cout << "C++23";
-    else if (__cplusplus == 202002L) std::cout << "C++20";
-    else if (__cplusplus == 201703L) std::cout << "C++17";
-    else if (__cplusplus == 201402L) std::cout << "C++14";
-    else if (__cplusplus == 201103L) std::cout << "C++11";
-    else if (__cplusplus == 199711L) std::cout << "C++98";
-    else std::cout << "pre-standard C++." << __cplusplus;
-    std::cout << "\n";
+        window.clear();
+        window.draw(shape);
+        window.display();
+    }
+
+    return 0;
 }
