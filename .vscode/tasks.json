@@ -9,9 +9,9 @@
                 "-o",
                 "${workspaceFolder}\\main.exe",
                 "-I",
-                "${workspaceFolder}\\SFML-2.6.1\\include\\",
+                "${workspaceFolder}\\SFML-2.6.1\\include",
                 "-L",
-                "${workspaceFolder}\\SFML-2.6.1\\lib\\",
+                "${workspaceFolder}\\SFML-2.6.1\\lib",
                 "${workspaceFolder}\\main.cpp",
                 "-lsfml-graphics",
                 "-lsfml-window",
@@ -21,7 +21,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-        },
+            }
+        }
     ]
 }
