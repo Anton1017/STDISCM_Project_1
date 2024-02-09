@@ -1,69 +1,134 @@
-#include <SFML/Graphics.hpp>
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
+// main.cpp
+#include <iostream>
+#include <vector>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+struct Particle {
+    float x, y;
+    float speed, angle;
+};
+
+std::vector<Particle> particles;
+float boxWidth = 720.0f;
+float boxHeight = 1280.0f;
+
+// GLFW callback for handling GUI events
+void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        // Normalize particle position to box coordinates
+        Particle particle;
+        particle.x = static_cast<float>(xpos) / boxWidth;
+        particle.y = 1.0f - static_cast<float>(ypos) / boxHeight;
+
+        particles.push_back(particle);
+    }
+}
 
 int main() {
-    // Create a window
-    sf::RenderWindow window(sf::VideoMode(1280, 720), "Particle Simulation");
-
-    // Seed for random number generation
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
-
-    // Define particle properties
-    struct Particle {
-        sf::Vector2f position;
-        sf::Vector2f velocity;
-    };
-
-    const int numParticles = 1000;
-    Particle particles[numParticles];
-
-    // Initialize particles with random positions, speeds, and angles
-    for (int i = 0; i < numParticles; ++i) {
-        particles[i].position = sf::Vector2f(static_cast<float>(rand() % 1280), static_cast<float>(rand() % 720));
-        float speed = static_cast<float>(rand() % 200 + 50); // Speed between 50 and 250 pixels per second
-        float angle = static_cast<float>(rand() % 360); // Angle in degrees
-        particles[i].velocity = sf::Vector2f(speed * std::cos(angle * 3.14f / 180.0f),
-                                             speed * std::sin(angle * 3.14f / 180.0f));
+    // Initialize GLFW
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
     }
 
-    // Main simulation loop
-    while (window.isOpen()) {
-        // Process events
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
+    // Create a GLFW window
+    GLFWwindow* window = glfwCreateWindow(720, 1280, "Particle Physics Simulator", NULL, NULL);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+
+    // Initialize GLEW
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW" << std::endl;
+        return -1;
+    }
+
+    // Initialize ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    // Set GLFW callback for mouse button events
+    glfwSetMouseButtonCallback(window, glfwMouseButtonCallback);
+
+    // Main loop
+    while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
+        // Start the ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // ImGui GUI
+        ImGui::Begin("Particle Parameters");
+        static float speed = 0.1f;
+        static float angle = 45.0f;
+        static int numParticles = 1;
+
+        ImGui::InputFloat("Speed", &speed);
+        ImGui::SliderFloat("Angle", &angle, 0.0f, 360.0f);
+        ImGui::InputInt("Number of Particles", &numParticles);
+
+        if (ImGui::Button("Add")) {
+            for (int i = 0; i < numParticles; ++i) {
+                Particle particle;
+                particle.speed = speed;
+                particle.angle = angle;
+
+                particles.push_back(particle);
             }
         }
 
-        // Clear the window
-        window.clear();
+        ImGui::End();
 
-        // Update and render particles
-        for (int i = 0; i < numParticles; ++i) {
-            // Update particle position
-            particles[i].position += particles[i].velocity * 0.01f; // Adjust the time step as needed
+        // Simulate particle physics
+        for (auto& particle : particles) {
+            // Update particle position based on speed and angle
+            particle.x += particle.speed * std::cos(glm::radians(particle.angle));
+            particle.y += particle.speed * std::sin(glm::radians(particle.angle));
 
-            // Bounce off the walls if a particle goes out of bounds
-            if (particles[i].position.x < 0 || particles[i].position.x > 1280) {
-                particles[i].velocity.x = -particles[i].velocity.x;
+            // Bounce off the walls
+            if (particle.x < 0.0f || particle.x > 1.0f) {
+                particle.angle = 180.0f - particle.angle;
             }
-            if (particles[i].position.y < 0 || particles[i].position.y > 720) {
-                particles[i].velocity.y = -particles[i].velocity.y;
+            if (particle.y < 0.0f || particle.y > 1.0f) {
+                particle.angle = -particle.angle;
             }
-
-            // Draw the particle as a one-pixel rectangle
-            sf::RectangleShape pixel(sf::Vector2f(1.0f, 1.0f));
-            pixel.setPosition(particles[i].position);
-            pixel.setFillColor(sf::Color::White);
-            window.draw(pixel);
         }
 
-        // Display the content
-        window.display();
+        // Render particles
+        glClear(GL_COLOR_BUFFER_BIT);
+        // Add your rendering code here (render particles as one-pixel points)
+
+        // Render ImGui
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        // Swap buffers
+        glfwSwapBuffers(window);
     }
+
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
 
     return 0;
 }
