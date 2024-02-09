@@ -1,124 +1,118 @@
-// main.cpp
-#include <iostream>
-#include <vector>
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
+
+#include <vector>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
 
 struct Particle {
-    float x, y;
-    float speed, angle;
+    ImVec2 position;
+    ImVec2 velocity;
+    float angle;  // Angle in radians
 };
 
+const int numParticles = 1000;
 std::vector<Particle> particles;
-float boxWidth = 720.0f;
-float boxHeight = 1280.0f;
 
-// GLFW callback for handling GUI events
-void glfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
+void InitializeParticles() {
+    particles.clear();
+    for (int i = 0; i < numParticles; ++i) {
+        float angle = static_cast<float>(rand() % 360) * 3.14f / 180.0f;
+        particles.push_back({
+            ImVec2(static_cast<float>(rand() % 200), static_cast<float>(rand() % 200)),
+            ImVec2(static_cast<float>(rand() % 10) * std::cos(angle),
+                   static_cast<float>(rand() % 10) * std::sin(angle)),
+            angle
+        });
+    }
+}
 
-        // Normalize particle position to box coordinates
-        Particle particle;
-        particle.x = static_cast<float>(xpos) / boxWidth;
-        particle.y = 1.0f - static_cast<float>(ypos) / boxHeight;
+void UpdateParticles() {
+    for (auto& particle : particles) {
+        particle.position.x += particle.velocity.x * 0.01f;
+        particle.position.y += particle.velocity.y * 0.01f;
 
-        particles.push_back(particle);
+        // Bounce off the walls
+        if (particle.position.x < 0 || particle.position.x >= 1280) {
+            particle.velocity.x *= -1;
+        }
+        if (particle.position.y < 0 || particle.position.y >= 720) {
+            particle.velocity.y *= -1;
+        }
     }
 }
 
 int main() {
     // Initialize GLFW
     if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
 
-    // Create a GLFW window
-    GLFWwindow* window = glfwCreateWindow(720, 1280, "Particle Physics Simulator", NULL, NULL);
+    // Create a windowed mode window and its OpenGL context
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Particle Simulation (ImGui + GLFW)", NULL, NULL);
     if (!window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
-    glfwMakeContextCurrent(window);
 
-    // Initialize GLEW
-    if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to initialize GLEW" << std::endl;
-        return -1;
-    }
+    // Make the window's context current
+    glfwMakeContextCurrent(window);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    // Set GLFW callback for mouse button events
-    glfwSetMouseButtonCallback(window, glfwMouseButtonCallback);
+    // Seed for random number generation
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+
+    // Set up initial particles
+    InitializeParticles();
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        // Start the ImGui frame
+        // ImGui new frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // ImGui GUI
-        ImGui::Begin("Particle Parameters");
-        static float speed = 0.1f;
-        static float angle = 45.0f;
-        static int numParticles = 1;
+        // ImGui UI
+        ImGui::Begin("Particle Simulation");
 
-        ImGui::InputFloat("Speed", &speed);
-        ImGui::SliderFloat("Angle", &angle, 0.0f, 360.0f);
-        ImGui::InputInt("Number of Particles", &numParticles);
+        if (ImGui::Button("Reset Particles")) {
+            InitializeParticles();
+        }
 
-        if (ImGui::Button("Add")) {
-            for (int i = 0; i < numParticles; ++i) {
-                Particle particle;
-                particle.speed = speed;
-                particle.angle = angle;
-
-                particles.push_back(particle);
-            }
+        // Draw particles within an ImGui window
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        for (const auto& particle : particles) {
+            drawList->AddRectFilled(
+                particle.position,
+                ImVec2(particle.position.x + 1.0f, particle.position.y + 1.0f),
+                IM_COL32(255, 255, 255, 255)
+            );
         }
 
         ImGui::End();
 
-        // Simulate particle physics
-        for (auto& particle : particles) {
-            // Update particle position based on speed and angle
-            particle.x += particle.speed * std::cos(glm::radians(particle.angle));
-            particle.y += particle.speed * std::sin(glm::radians(particle.angle));
+        // Update and render particles
+        UpdateParticles();
 
-            // Bounce off the walls
-            if (particle.x < 0.0f || particle.x > 1.0f) {
-                particle.angle = 180.0f - particle.angle;
-            }
-            if (particle.y < 0.0f || particle.y > 1.0f) {
-                particle.angle = -particle.angle;
-            }
-        }
-
-        // Render particles
-        glClear(GL_COLOR_BUFFER_BIT);
-        // Add your rendering code here (render particles as one-pixel points)
-
-        // Render ImGui
+        // ImGui rendering
         ImGui::Render();
+        glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        // Swap buffers
+        // Swap front and back buffers
         glfwSwapBuffers(window);
     }
 
@@ -127,8 +121,6 @@ int main() {
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    glfwDestroyWindow(window);
     glfwTerminate();
-
     return 0;
 }
