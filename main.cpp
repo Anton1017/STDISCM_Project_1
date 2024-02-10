@@ -14,7 +14,7 @@ struct Particle {
     float angle;  // Angle in radians
 };
 
-const int numParticles = 1000;
+const int numParticles = 0;
 std::vector<Particle> particles;
 
 void InitializeParticles() {
@@ -84,18 +84,8 @@ int main() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::ShowDemoWindow(); // Show demo window! :)
+        // ImGui::ShowDemoWindow(); // Show demo window! :)
 
-
-        ImGuiStyle& style = ImGui::GetStyle();
-        style.WindowBorderSize = 1.0f;  // Set the window border size to 1 pixel
-
-        // Set other window-related styles as needed
-        style.FrameBorderSize = 1.0f;   // Set the size of the frame border
-        style.FrameRounding = 0.0f;     // Disable rounding of frame corners
-        style.WindowRounding = 0.0f;    // Disable rounding of window corners
-        style.ScrollbarSize = 0.0f;    // Set the size of scrollbars
-        style.GrabMinSize = 0.0f;      // Set the minimum size of the resizing grip
 
         ImGui::SetNextWindowSize(ImVec2(1280, 720));
         ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -125,6 +115,35 @@ int main() {
         }
         ImGui::End();
         ImGui::PopStyleVar(2);
+
+        ImGui::SetNextWindowSize(ImVec2(640, 720));
+        ImGui::SetNextWindowPos(ImVec2(1281, 0));
+
+        ImGui::Begin("Particle Simulation Parameters");
+        static float speed = 0.1f;
+        static float angle = 45.0f;
+        static int numAddParticles = 1;
+
+        ImGui::InputFloat("Speed", &speed);
+        ImGui::SliderFloat("Angle", &angle, 0.0f, 360.0f);
+        ImGui::InputInt("Number of Particles", &numAddParticles);
+        if (ImGui::Button("Add")) {
+            int spacing = numAddParticles;
+            for (int i = 0; i < numAddParticles; ++i) {
+                Particle particle;
+                particle.position = ImVec2(static_cast<float>((i*2) % 1280), static_cast<float>((i*2) % 720));
+                particle.velocity = ImVec2( 
+                                            speed * std::cos(angle),
+                                            speed * std::sin(angle)
+                                            ),
+                particle.angle = angle;
+                 particles.push_back(particle);
+            }
+        }
+        if (ImGui::Button("Reset")) {
+            particles.clear();
+        }
+        ImGui::End();
 
         // Update and render particles
         UpdateParticles();
