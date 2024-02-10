@@ -3,10 +3,16 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include <iostream>
 #include <vector>
 #include <cmath>
+#include <math.h>
 #include <cstdlib>
 #include <ctime>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 struct Particle {
     ImVec2 position;
@@ -135,15 +141,17 @@ int main() {
         ImGui::SliderFloat("Angle", &angle, 0.0f, 360.0f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
+            
             int spacing = numAddParticles;
             for (int i = 0; i < numAddParticles; ++i) {
                 Particle particle;
                 particle.position = ImVec2(static_cast<float>((i*2) % 1280), static_cast<float>((i*2) % 720));
+                particle.angle = (-(angle + 180.0f)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 particle.velocity = ImVec2( 
-                                            speed * std::cos(angle),
-                                            speed * std::sin(angle)
-                                            ),
-                particle.angle = (angle) * (static_cast<float>(0x40490fdb) / 180.0f); //convert degrees to radians
+                                            speed * std::cos(particle.angle),
+                                            speed * std::sin(particle.angle)
+                                            );
+                
                 particles.push_back(particle);
             }
         }
