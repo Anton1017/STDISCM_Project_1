@@ -162,6 +162,16 @@ int main() {
         if (ImGui::Button("Reset")) {
             particles.clear();
         }
+
+        float currXCursor = static_cast<float>(x);
+        float currYCursor = static_cast<float>(720-y);
+
+        drawList->AddRectFilled(
+                ImVec2(currXCursor - 3.0f, currYCursor - 3.0f),
+                ImVec2(currXCursor + 3.0f, currYCursor + 3.0f),
+                IM_COL32(255, 255, 0, 128)
+            );
+
         ImGui::End();
 
         // Update and render particles
