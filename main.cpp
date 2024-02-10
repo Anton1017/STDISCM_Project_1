@@ -145,6 +145,18 @@ int main() {
         }
         ImGui::End();
 
+
+        ImGui::SetNextWindowSize(ImVec2(100, 20));
+        ImGui::SetNextWindowPos(ImVec2(
+            ImGui::GetIO().DisplaySize.x - 100,
+            ImGui::GetIO().DisplaySize.y - 20));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("Framerate", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+        ImGui::Text("%.3f FPS", io.Framerate);
+        ImGui::End();
+        ImGui::PopStyleVar(2);
+
         // Update and render particles
         UpdateParticles();
 
