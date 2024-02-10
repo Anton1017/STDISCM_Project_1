@@ -132,20 +132,24 @@ int main() {
         ImGui::SetNextWindowPos(ImVec2(1281, 0));
 
         ImGui::Begin("Particle Simulation Parameters");
-        static float speed = 0.1f;
-        static float angle = 45.0f;
+        static int x = 1;
+        static int y = 1;
+        static float speed = 10.0f;
+        static float angle = 0.0f;
         static int numAddParticles = 1;
         ImGui::Text("Particle Count: %d", particles.size());
 
-        ImGui::InputFloat("Speed", &speed);
-        ImGui::SliderFloat("Angle", &angle, 0.0f, 360.0f);
+        ImGui::SliderInt("Initial Position - x", &x, 1, 1280);
+        ImGui::SliderInt("Initial Position - y", &y, 1, 720);
+        ImGui::InputFloat("Speed - pixels/sec.", &speed);
+        ImGui::SliderFloat("Angle - degrees", &angle, 0.0f, 360.0f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
             
             int spacing = numAddParticles;
             for (int i = 0; i < numAddParticles; ++i) {
                 Particle particle;
-                particle.position = ImVec2(static_cast<float>((i*2) % 1280), static_cast<float>((i*2) % 720));
+                particle.position = ImVec2(static_cast<float>((i*2 + x) % 1280), static_cast<float>(abs((-i*2 + (720-y)) % 720)));
                 particle.angle = (-(angle + 180.0f)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 particle.velocity = ImVec2( 
                                             speed * std::cos(particle.angle),
