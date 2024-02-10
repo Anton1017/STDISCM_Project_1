@@ -37,10 +37,10 @@ void UpdateParticles(ImGuiIO& io) {
         particle.position.y += particle.velocity.y * (1.0f/io.Framerate);
 
         // Bounce off the walls
-        if (particle.position.x < 0 || particle.position.x >= 1280) {
+        if (particle.position.x <= 0 || particle.position.x >= 1280) {
             particle.velocity.x *= -1;
         }
-        if (particle.position.y < 0 || particle.position.y >= 720) {
+        if (particle.position.y <= 0 || particle.position.y >= 720) {
             particle.velocity.y *= -1;
         }
     }
