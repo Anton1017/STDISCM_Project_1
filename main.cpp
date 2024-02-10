@@ -30,10 +30,11 @@ void InitializeParticles() {
     }
 }
 
-void UpdateParticles() {
+void UpdateParticles(ImGuiIO& io) {
     for (auto& particle : particles) {
-        particle.position.x += particle.velocity.x * 0.01f;
-        particle.position.y += particle.velocity.y * 0.01f;
+        // use framerate to keep speed constant
+        particle.position.x += particle.velocity.x * (1.0f/io.Framerate);
+        particle.position.y += particle.velocity.y * (1.0f/io.Framerate);
 
         // Bounce off the walls
         if (particle.position.x < 0 || particle.position.x >= 1280) {
@@ -109,14 +110,6 @@ int main() {
         // Draw particles within an ImGui window
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         for (const auto& particle : particles) {
-            		// Yellow is content region min/max
-			ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-			ImVec2 vMax = ImGui::GetWindowContentRegionMax();
-
-			vMin.x += ImGui::GetWindowPos().x;
-			vMin.y += ImGui::GetWindowPos().y;
-			vMax.x += ImGui::GetWindowPos().x;
-			vMax.y += ImGui::GetWindowPos().y;
 
             drawList->AddRectFilled(
                 particle.position,
@@ -148,8 +141,8 @@ int main() {
                                             speed * std::cos(angle),
                                             speed * std::sin(angle)
                                             ),
-                particle.angle = angle;
-                 particles.push_back(particle);
+                particle.angle = (angle) * (static_cast<float>(0x40490fdb) / 180.0f); //convert degrees to radians
+                particles.push_back(particle);
             }
         }
         if (ImGui::Button("Reset")) {
@@ -158,7 +151,7 @@ int main() {
         ImGui::End();
 
         // Update and render particles
-        UpdateParticles();
+        UpdateParticles(io);
 
         // ImGui rendering
         ImGui::Render();
