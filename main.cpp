@@ -86,6 +86,17 @@ int main() {
         ImGui::NewFrame();
         // ImGui::ShowDemoWindow(); // Show demo window! :)
 
+        ImGui::SetNextWindowSize(ImVec2(100, 20));
+        ImGui::SetNextWindowPos(ImVec2(
+            ImGui::GetIO().DisplaySize.x - 100,
+            ImGui::GetIO().DisplaySize.y - 20));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::Begin("Framerate", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+        ImGui::Text("%.3f FPS", io.Framerate);
+        ImGui::End();
+        ImGui::PopStyleVar(2);
+
 
         ImGui::SetNextWindowSize(ImVec2(1280, 720));
         ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -116,13 +127,14 @@ int main() {
         ImGui::End();
         ImGui::PopStyleVar(2);
 
-        ImGui::SetNextWindowSize(ImVec2(640, 720));
+        ImGui::SetNextWindowSize(ImVec2(640, ImGui::GetIO().DisplaySize.y - 20));
         ImGui::SetNextWindowPos(ImVec2(1281, 0));
 
         ImGui::Begin("Particle Simulation Parameters");
         static float speed = 0.1f;
         static float angle = 45.0f;
         static int numAddParticles = 1;
+        ImGui::Text("Particle Count: %d", particles.size());
 
         ImGui::InputFloat("Speed", &speed);
         ImGui::SliderFloat("Angle", &angle, 0.0f, 360.0f);
@@ -144,18 +156,6 @@ int main() {
             particles.clear();
         }
         ImGui::End();
-
-
-        ImGui::SetNextWindowSize(ImVec2(100, 20));
-        ImGui::SetNextWindowPos(ImVec2(
-            ImGui::GetIO().DisplaySize.x - 100,
-            ImGui::GetIO().DisplaySize.y - 20));
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-        ImGui::Begin("Framerate", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-        ImGui::Text("%.3f FPS", io.Framerate);
-        ImGui::End();
-        ImGui::PopStyleVar(2);
 
         // Update and render particles
         UpdateParticles();
