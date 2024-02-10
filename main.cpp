@@ -61,6 +61,8 @@ int main() {
 
     // Make the window's context current
     glfwMakeContextCurrent(window);
+    
+    glfwSwapInterval(1); // Enable vsync
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
