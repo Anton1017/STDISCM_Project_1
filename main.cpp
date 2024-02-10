@@ -120,8 +120,8 @@ int main() {
         for (const auto& particle : particles) {
 
             drawList->AddRectFilled(
-                particle.position,
-                ImVec2(particle.position.x + 1.0f, particle.position.y + 1.0f),
+                ImVec2(particle.position.x - 1.5f, particle.position.y - 1.5f),
+                ImVec2(particle.position.x + 1.5f, particle.position.y + 1.5f),
                 IM_COL32(255, 255, 255, 255)
             );
         }
@@ -149,7 +149,7 @@ int main() {
             int spacing = numAddParticles;
             for (int i = 0; i < numAddParticles; ++i) {
                 Particle particle;
-                particle.position = ImVec2(static_cast<float>((i*2 + x) % 1280), static_cast<float>(abs((-i*2 + (720-y)) % 720)));
+                particle.position = ImVec2(static_cast<float>((i*4 + x) % 1280), static_cast<float>(abs((-i*4 + (720-y)) % 720)));
                 particle.angle = (-(angle + 180.0f)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 particle.velocity = ImVec2( 
                                             speed * std::cos(particle.angle),
@@ -169,7 +169,7 @@ int main() {
         drawList->AddRectFilled(
                 ImVec2(currXCursor - 3.0f, currYCursor - 3.0f),
                 ImVec2(currXCursor + 3.0f, currYCursor + 3.0f),
-                IM_COL32(255, 255, 0, 128)
+                IM_COL32(255, 255, 0, 192)
             );
 
         ImGui::End();
