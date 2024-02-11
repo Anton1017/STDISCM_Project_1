@@ -27,9 +27,10 @@ struct Walls {
     ImVec2 p1;
     ImVec2 p2;
 };
-
-// Example user-defined line
-//LineSegment userDefinedLine = { ImVec2(200, 200), ImVec2(400, 400) };
+std::vector<Walls> wall;
+const int numWalls = 0;
+//Example user-defined line
+Walls userDefinedLine = { ImVec2(200.00, 200.00), ImVec2(400.00, 400.00) };
 
 void InitializeParticles() {
     particles.clear();
@@ -57,6 +58,7 @@ void UpdateParticles(ImGuiIO& io) {
         if (particle.position.y <= 0 || particle.position.y >= 720) {
             particle.velocity.y *= -1;
         }
+        //TODO Checks if there is collision
     }
 }
 
@@ -177,7 +179,7 @@ int main() {
         static int wall_y1 = 1;
         static int wall_x2 = 1;
         static int wall_y2 = 1;
-        ImGui::Text("Wall Count: ");
+        ImGui::Text("Wall Count: %d", wall.size());
         ImGui::Text("Endpoint 1");
         ImGui::SliderInt("X1", &wall_x1, 1, 1280);
         ImGui::SliderInt("Y1", &wall_y1, 1, 720);
