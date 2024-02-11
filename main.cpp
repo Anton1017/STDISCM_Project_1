@@ -138,7 +138,7 @@ int main() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Particle Simulation", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 
-        // Draw particles within an ImGui window
+        // Draw particles and walls within an ImGui window
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         for (const auto& particle : particles) {
 
@@ -148,6 +148,15 @@ int main() {
                 IM_COL32(255, 255, 255, 255)
             );
         }
+        for (const auto& walls : wall) {
+            drawList->AddLine(
+                walls.p1,
+                walls.p2,
+                IM_COL32(255, 0, 0, 255),
+                2.0f // Line thickness
+            );
+        }
+
         ImGui::End();
         ImGui::PopStyleVar(2);
 
