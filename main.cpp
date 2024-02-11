@@ -187,10 +187,11 @@ int main() {
         ImGui::SliderInt("X2", &wall_x2, 1, 1280);
         ImGui::SliderInt("Y2", &wall_y2, 1, 720);
         if (ImGui::Button("Add Wall")) {
-            
+            Walls newWall = { ImVec2(wall_x1, wall_y1), ImVec2(wall_x2, wall_y2) };
+            wall.push_back(newWall);
         }
         if (ImGui::Button("Reset Wall")) {
-                        
+            wall.clear();
         }
 
         float currXCursor = static_cast<float>(x);
