@@ -39,8 +39,8 @@ void InitializeParticles() {
 void UpdateParticles(ImGuiIO& io) {
     for (auto& particle : particles) {
         // use framerate to keep speed constant
-        particle.position.x += particle.velocity.x * (1.0f/io.Framerate);
-        particle.position.y += particle.velocity.y * (1.0f/io.Framerate);
+        particle.position.x += particle.velocity.x / io.Framerate;
+        particle.position.y += particle.velocity.y / io.Framerate;
 
         // Bounce off the walls
         if (particle.position.x <= 0 || particle.position.x >= 1280) {
