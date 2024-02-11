@@ -23,6 +23,14 @@ struct Particle {
 const int numParticles = 0;
 std::vector<Particle> particles;
 
+struct Walls {
+    ImVec2 p1;
+    ImVec2 p2;
+};
+
+// Example user-defined line
+//LineSegment userDefinedLine = { ImVec2(200, 200), ImVec2(400, 400) };
+
 void InitializeParticles() {
     particles.clear();
     for (int i = 0; i < numParticles; ++i) {
@@ -51,6 +59,8 @@ void UpdateParticles(ImGuiIO& io) {
         }
     }
 }
+
+
 
 int main() {
     // Initialize GLFW
@@ -139,8 +149,8 @@ int main() {
         static int numAddParticles = 1;
         ImGui::Text("Particle Count: %d", particles.size());
 
-        ImGui::SliderInt("Initial Position - x", &x, 1, 1280);
-        ImGui::SliderInt("Initial Position - y", &y, 1, 720);
+        ImGui::SliderInt("Initial Position - x", &x, 0, 1280);
+        ImGui::SliderInt("Initial Position - y", &y, 0, 720);
         ImGui::InputFloat("Speed - pixels/sec.", &speed);
         ImGui::SliderFloat("Angle - degrees", &angle, 0.0f, 360.0f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
@@ -173,6 +183,7 @@ int main() {
             );
 
         ImGui::End();
+
 
         // Update and render particles
         UpdateParticles(io);
