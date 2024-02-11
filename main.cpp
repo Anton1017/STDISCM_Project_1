@@ -150,7 +150,7 @@ int main() {
             for (int i = 0; i < numAddParticles; ++i) {
                 Particle particle;
                 particle.position = ImVec2(static_cast<float>((i*4 + x) % 1280), static_cast<float>(abs((-i*4 + (720-y)) % 720)));
-                particle.angle = (-(angle + 180.0f)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
+                particle.angle = (-(angle)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 particle.velocity = ImVec2( 
                                             speed * std::cos(particle.angle),
                                             speed * std::sin(particle.angle)
