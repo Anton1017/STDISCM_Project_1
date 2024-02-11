@@ -40,7 +40,7 @@ void InitializeParticles() {
             ImVec2(static_cast<float>(rand() % 10 + 1) * std::cos(angle),
                    static_cast<float>(rand() % 10 + 1) * std::sin(angle)),
             angle
-        });
+            });
     }
 }
 
@@ -77,7 +77,7 @@ int main() {
 
     // Make the window's context current
     glfwMakeContextCurrent(window);
-    
+
     glfwSwapInterval(1); // Enable vsync
 
     // Initialize ImGui
@@ -149,38 +149,49 @@ int main() {
         static int numAddParticles = 1;
         ImGui::Text("Particle Count: %d", particles.size());
 
-        ImGui::SliderInt("Initial Position - x", &x, 0, 1280);
-        ImGui::SliderInt("Initial Position - y", &y, 0, 720);
+        ImGui::SliderInt("Initial Position - x", &x, 1, 1280);
+        ImGui::SliderInt("Initial Position - y", &y, 1, 720);
         ImGui::InputFloat("Speed - pixels/sec.", &speed);
         ImGui::SliderFloat("Angle - degrees", &angle, 0.0f, 360.0f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
-            
+
             int spacing = numAddParticles;
             for (int i = 0; i < numAddParticles; ++i) {
                 Particle particle;
-                particle.position = ImVec2(static_cast<float>((i*4 + x) % 1280), static_cast<float>(abs((-i*4 + (720-y)) % 720)));
+                particle.position = ImVec2(static_cast<float>((i * 4 + x) % 1280), static_cast<float>(abs((-i * 4 + (720 - y)) % 720)));
                 particle.angle = (-(angle)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
-                particle.velocity = ImVec2( 
-                                            speed * std::cos(particle.angle),
-                                            speed * std::sin(particle.angle)
-                                            );
-                
+                particle.velocity = ImVec2(
+                    speed * std::cos(particle.angle),
+                    speed * std::sin(particle.angle)
+                );
+
                 particles.push_back(particle);
             }
         }
         if (ImGui::Button("Reset")) {
             particles.clear();
         }
-
+        //Parameters for wall
+        static int wall_x1 = 1;
+        static int wall_y1 = 1;
+        static int wall_x2 = 1;
+        static int wall_y2 = 1;
+        ImGui::Text("Wall Count: ");
+        ImGui::Text("Endpoint 1");
+        ImGui::SliderInt("X1", &wall_x1, 1, 1280);
+        ImGui::SliderInt("Y1", &wall_y1, 1, 720);
+        ImGui::Text("Endpoint 2");
+        ImGui::SliderInt("X2", &wall_x2, 1, 1280);
+        ImGui::SliderInt("Y2", &wall_y2, 1, 720);
         float currXCursor = static_cast<float>(x);
-        float currYCursor = static_cast<float>(720-y);
+        float currYCursor = static_cast<float>(720 - y);
 
         drawList->AddRectFilled(
-                ImVec2(currXCursor - 3.0f, currYCursor - 3.0f),
-                ImVec2(currXCursor + 3.0f, currYCursor + 3.0f),
-                IM_COL32(255, 255, 0, 192)
-            );
+            ImVec2(currXCursor - 3.0f, currYCursor - 3.0f),
+            ImVec2(currXCursor + 3.0f, currYCursor + 3.0f),
+            IM_COL32(255, 255, 0, 192)
+        );
 
         ImGui::End();
 
