@@ -18,7 +18,7 @@
 struct Particle {
     ImVec2 position;
     ImVec2 velocity;
-    float angle;  // Angle in radians
+    // Angle is computed upon addition of particle, and translated to horizontal and vertical velocity (ImVec2).
 };
 
 const int numParticles = 0;
@@ -30,39 +30,44 @@ struct Walls {
 };
 std::vector<Walls> wall;
 const int numWalls = 0;
-//Example user-defined line
-Walls userDefinedLine = { ImVec2(200.00, 200.00), ImVec2(400.00, 400.00) };
 
-void InitializeParticles() {
-    particles.clear();
-    for (int i = 0; i < numParticles; ++i) {
-        float angle = static_cast<float>(rand() % 360) * 3.14f / 180.0f;
-        particles.push_back({
-            ImVec2(static_cast<float>(rand() % 200), static_cast<float>(rand() % 200)),
-            ImVec2(static_cast<float>(rand() % 10 + 1) * std::cos(angle),
-                   static_cast<float>(rand() % 10 + 1) * std::sin(angle)),
-            angle
-            });
+void AdjustParticlePosition(Particle& particle) {
+    float slope = particle.velocity.y / particle.velocity.x;
+
+    if (particle.position.x < 0) {
+        particle.position.x = 0;
+        particle.position.y = slope * particle.position.x + particle.position.y;
+        particle.velocity.x *= -1;
+    } else if (particle.position.x >= 1280) {
+        particle.position.x = 1279;
+        particle.position.y = slope * (particle.position.x - 1279) + particle.position.y;
+        particle.velocity.x *= -1;
+    }
+
+    if (particle.position.y < 0) {
+        particle.position.y = 0;
+        particle.position.x = particle.position.y / slope + particle.position.x;
+        particle.velocity.y *= -1;
+    } else if (particle.position.y >= 720) {
+        particle.position.y = 719;
+        particle.position.x = (particle.position.y - 719) / slope + particle.position.x;
+        particle.velocity.y *= -1;
     }
 }
 
+
 void UpdateParticles(ImGuiIO& io) {
     for (auto& particle : particles) {
-        // use framerate to keep speed constant
         particle.position.x += particle.velocity.x / io.Framerate;
         particle.position.y += particle.velocity.y / io.Framerate;
 
         // Bounce off the walls
-        if (particle.position.x <= 0 || particle.position.x >= 1280) {
-            particle.velocity.x *= -1;
+        if (particle.position.x <= 0 || particle.position.x > 1280 ||
+            particle.position.y <= 0 || particle.position.y > 720) {
+            AdjustParticlePosition(particle);
         }
-        if (particle.position.y <= 0 || particle.position.y >= 720) {
-            particle.velocity.y *= -1;
-        }
-        //TODO Checks if there is collision
     }
 }
-
 
 
 int main() {
@@ -93,12 +98,6 @@ int main() {
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-
-    // Seed for random number generation
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
-
-    // Set up initial particles
-    InitializeParticles();
 
     double lastDisplayTime = glfwGetTime();
     double currentFramerate = io.Framerate;
@@ -146,12 +145,10 @@ int main() {
         ImGui::SetNextWindowSize(ImVec2(1280, 720));
         ImGui::SetNextWindowPos(ImVec2(0, 0));
 
-        // ImGui UI
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Particle Simulation", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 
-        // Draw particles and walls within an ImGui window
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         for (const auto& particle : particles) {
 
@@ -180,10 +177,10 @@ int main() {
         
         ImGui::Text("Particle Count: %d", particles.size());
 
-        ImGui::SliderInt("[Start Point] - x", &sx, 1, 1280);
-        ImGui::SliderInt("[Start Point] - y", &sy, 1, 720);
-        ImGui::SliderInt("[End Point] - x", &ex, 1, 1280);
-        ImGui::SliderInt("[End Point] - y", &ey, 1, 720);
+        ImGui::SliderInt("[Start Point] - x", &sx, 0, 1279);
+        ImGui::SliderInt("[Start Point] - y", &sy, 0, 719);
+        ImGui::SliderInt("[End Point] - x", &ex, 0, 1279);
+        ImGui::SliderInt("[End Point] - y", &ey, 0, 719);
         ImGui::InputFloat("[Start Velocity] pix/s", &startSpeed);
         ImGui::SliderFloat("[Start Angle] - degrees", &startAngle, 0.0f, 359.0f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
@@ -195,13 +192,13 @@ int main() {
             float ySpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; i++) {
                 Particle particle;
-                particle.position = ImVec2(static_cast<float>(sx) + xSpacingSum, 720 - (static_cast<float>(sy) + ySpacingSum));
+                particle.position = ImVec2(static_cast<float>(sx) + xSpacingSum, 719 - (static_cast<float>(sy) + ySpacingSum));
                 xSpacingSum += xSpacing;
                 ySpacingSum += ySpacing;
-                particle.angle = (-(startAngle)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
+                float angle = (-(startAngle)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 particle.velocity = ImVec2(
-                    startSpeed * std::cos(particle.angle),
-                    startSpeed * std::sin(particle.angle)
+                    startSpeed * std::cos(angle),
+                    startSpeed * std::sin(angle)
                 );
 
                 particles.push_back(particle);
@@ -242,8 +239,8 @@ int main() {
 
         ImGui::Begin("[Start-End Angle] Batch Adding");
 
-        ImGui::SliderInt("[Start Point] - x", &sx, 1, 1280);
-        ImGui::SliderInt("[Start Point] - y", &sy, 1, 720);
+        ImGui::SliderInt("[Start Point] - x", &sx, 0, 1279);
+        ImGui::SliderInt("[Start Point] - y", &sy, 0, 719);
         ImGui::InputFloat("[Start Velocity] pix/s", &startSpeed);
         ImGui::SliderFloat("[Start Angle] - degrees", &startAngle, 0.0f, 359.0f);
         ImGui::SliderFloat("[End Angle] - degrees", &endAngle, 0.0f, 359.0f);
@@ -259,12 +256,12 @@ int main() {
             float angleSpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; i++) {
                 Particle particle;
-                particle.position = ImVec2(static_cast<float>(sx), 720 - (static_cast<float>(sy)));
-                particle.angle = (-(startAngle + angleSpacingSum)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
+                particle.position = ImVec2(static_cast<float>(sx), 719 - (static_cast<float>(sy)));
+                float angle = (-(startAngle + angleSpacingSum)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 angleSpacingSum += angleSpacing;
                 particle.velocity = ImVec2(
-                    startSpeed * std::cos(particle.angle),
-                    startSpeed * std::sin(particle.angle)
+                    startSpeed * std::cos(angle),
+                    startSpeed * std::sin(angle)
                 );
 
                 particles.push_back(particle);
@@ -277,8 +274,8 @@ int main() {
         ImGui::SetNextWindowPos(ImVec2(1281, 641));
         ImGui::Begin("[Start-End Velocity] Batch Adding");
 
-        ImGui::SliderInt("[Start Point] - x", &sx, 1, 1280);
-        ImGui::SliderInt("[Start Point] - y", &sy, 1, 720);
+        ImGui::SliderInt("[Start Point] - x", &sx, 0, 1279);
+        ImGui::SliderInt("[Start Point] - y", &sy, 0, 719);
         ImGui::InputFloat("[Start Velocity] pix/s", &startSpeed);
         ImGui::InputFloat("[End Velocity] pix/s", &endSpeed);
         ImGui::SliderFloat("Start Angle - degrees", &startAngle, 0.0f, 359.0f);
@@ -289,11 +286,11 @@ int main() {
             float vSpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; i++) {
                 Particle particle;
-                particle.position = ImVec2(static_cast<float>(sx), 720 - (static_cast<float>(sy)));
-                particle.angle = (-(startAngle)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
+                particle.position = ImVec2(static_cast<float>(sx), 719 - (static_cast<float>(sy)));
+                float angle = (-(startAngle)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 particle.velocity = ImVec2(
-                    (startSpeed+vSpacingSum) * std::cos(particle.angle),
-                    (startSpeed+vSpacingSum) * std::sin(particle.angle)
+                    (startSpeed+vSpacingSum) * std::cos(angle),
+                    (startSpeed+vSpacingSum) * std::sin(angle)
                 );
                 vSpacingSum += vSpacing;
 
@@ -313,11 +310,11 @@ int main() {
         static int wall_y2 = 1;
         ImGui::Text("Wall Count: %d", wall.size());
         ImGui::Text("Endpoint 1");
-        ImGui::SliderInt("X1", &wall_x1, 1, 1280);
-        ImGui::SliderInt("Y1", &wall_y1, 1, 720);
+        ImGui::SliderInt("X1", &wall_x1, 0, 1219);
+        ImGui::SliderInt("Y1", &wall_y1, 0, 719);
         ImGui::Text("Endpoint 2");
-        ImGui::SliderInt("X2", &wall_x2, 1, 1280);
-        ImGui::SliderInt("Y2", &wall_y2, 1, 720);
+        ImGui::SliderInt("X2", &wall_x2, 0, 1219);
+        ImGui::SliderInt("Y2", &wall_y2, 0, 719);
         if (ImGui::Button("Add Wall")) {
             Walls newWall = { ImVec2(static_cast<float>(wall_x1), static_cast<float>(wall_y1)), ImVec2(static_cast<float>(wall_x2), static_cast<float>(wall_y2)) };
             wall.push_back(newWall);
