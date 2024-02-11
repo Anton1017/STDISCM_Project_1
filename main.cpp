@@ -184,6 +184,13 @@ int main() {
         ImGui::Text("Endpoint 2");
         ImGui::SliderInt("X2", &wall_x2, 1, 1280);
         ImGui::SliderInt("Y2", &wall_y2, 1, 720);
+        if (ImGui::Button("Add Wall")) {
+            
+        }
+        if (ImGui::Button("Reset Wall")) {
+                        
+        }
+
         float currXCursor = static_cast<float>(x);
         float currYCursor = static_cast<float>(720 - y);
 
