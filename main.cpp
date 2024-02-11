@@ -97,6 +97,9 @@ int main() {
     // Set up initial particles
     InitializeParticles();
 
+    double lastDisplayTime = glfwGetTime();
+    double currentFramerate = io.Framerate;
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -107,6 +110,8 @@ int main() {
         ImGui::NewFrame();
         // ImGui::ShowDemoWindow(); // Show demo window! :)
 
+        double currentTime = glfwGetTime();
+
         ImGui::SetNextWindowSize(ImVec2(100, 20));
         ImGui::SetNextWindowPos(ImVec2(
             ImGui::GetIO().DisplaySize.x - 100,
@@ -114,7 +119,13 @@ int main() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Framerate", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-        ImGui::Text("%.3f FPS", io.Framerate);
+        if (currentTime - lastDisplayTime >= 0.5) { //0.5s
+            currentFramerate = io.Framerate;
+            std::cout << "Framerate: " << currentFramerate << " FPS" << std::endl;
+            lastDisplayTime = currentTime;
+        }
+        ImGui::Text("%.3f FPS", currentFramerate);
+        
         ImGui::End();
         ImGui::PopStyleVar(2);
 
@@ -187,7 +198,7 @@ int main() {
         ImGui::SliderInt("X2", &wall_x2, 1, 1280);
         ImGui::SliderInt("Y2", &wall_y2, 1, 720);
         if (ImGui::Button("Add Wall")) {
-            Walls newWall = { ImVec2(wall_x1, wall_y1), ImVec2(wall_x2, wall_y2) };
+            Walls newWall = { ImVec2(static_cast<float>(wall_x1), static_cast<float>(wall_y1)), ImVec2(static_cast<float>(wall_x2), static_cast<float>(wall_y2)) };
             wall.push_back(newWall);
         }
         if (ImGui::Button("Reset Wall")) {
