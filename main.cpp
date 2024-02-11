@@ -71,7 +71,7 @@ int main() {
     }
 
     // Create a windowed mode window and its OpenGL context
-    GLFWwindow* window = glfwCreateWindow(1920, 720, "Particle Simulation (ImGui + GLFW)", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "Particle Simulation (ImGui + GLFW)", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -81,6 +81,8 @@ int main() {
     glfwMakeContextCurrent(window);
 
     glfwSwapInterval(1); // Enable vsync
+
+    glfwMaximizeWindow(window);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();
@@ -160,28 +162,37 @@ int main() {
         ImGui::End();
         ImGui::PopStyleVar(2);
 
-        ImGui::SetNextWindowSize(ImVec2(640, ImGui::GetIO().DisplaySize.y - 20));
+        ImGui::SetNextWindowSize(ImVec2(640, 230));
         ImGui::SetNextWindowPos(ImVec2(1281, 0));
 
-        ImGui::Begin("Particle Simulation Parameters");
-        static int x = 1;
-        static int y = 1;
+        ImGui::Begin("[Start-End Point] Batch Adding");
+        static int sx = 1;
+        static int sy = 1;
+        static int ex = 1;
+        static int ey = 1;
         static float speed = 10.0f;
         static float angle = 0.0f;
         static int numAddParticles = 1;
         ImGui::Text("Particle Count: %d", particles.size());
 
-        ImGui::SliderInt("Initial Position - x", &x, 1, 1280);
-        ImGui::SliderInt("Initial Position - y", &y, 1, 720);
+        ImGui::SliderInt("[Start Point] - x", &sx, 1, 1280);
+        ImGui::SliderInt("[Start Point] - y", &sy, 1, 720);
+        ImGui::SliderInt("[End Point] - x", &ex, 1, 1280);
+        ImGui::SliderInt("[End Point] - y", &ey, 1, 720);
         ImGui::InputFloat("Speed - pixels/sec.", &speed);
         ImGui::SliderFloat("Angle - degrees", &angle, 0.0f, 360.0f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
 
-            int spacing = numAddParticles;
+            float xSpacing = static_cast<float>((ex-sx) / numAddParticles);
+            float ySpacing = static_cast<float>((ey-sy) / numAddParticles);
+            float xSpacingSum = 0.0f;
+            float ySpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; ++i) {
                 Particle particle;
-                particle.position = ImVec2(static_cast<float>((i * 4 + x) % 1280), static_cast<float>(abs((-i * 4 + (720 - y)) % 720)));
+                particle.position = ImVec2(static_cast<float>(sx) + xSpacingSum, 720 - (static_cast<float>(sy) + ySpacingSum));
+                xSpacingSum += xSpacing;
+                ySpacingSum += ySpacing;
                 particle.angle = (-(angle)) * (static_cast<float>(M_PI) / 180.0f); //convert degrees to radians
                 particle.velocity = ImVec2(
                     speed * std::cos(particle.angle),
@@ -191,9 +202,38 @@ int main() {
                 particles.push_back(particle);
             }
         }
+
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGui::CalcTextSize("Reset").x - ImGui::GetStyle().FramePadding.x * 2 - ImGui::GetStyle().ScrollbarSize);
+        ImGui::SetCursorPosY(ImGui::CalcTextSize("Reset").y * 2);
         if (ImGui::Button("Reset")) {
             particles.clear();
         }
+        
+        float startXCursor = static_cast<float>(sx);
+        float startYCursor = static_cast<float>(720 - sy);
+
+        drawList->AddRectFilled(
+            ImVec2(startXCursor - 3.0f, startYCursor - 3.0f),
+            ImVec2(startXCursor + 3.0f, startYCursor + 3.0f),
+            IM_COL32(0, 255, 0, 192)
+        );
+
+
+        float endXCursor = static_cast<float>(ex);
+        float endYCursor = static_cast<float>(720 - ey);
+
+        drawList->AddRectFilled(
+            ImVec2(endXCursor - 3.0f, endYCursor - 3.0f),
+            ImVec2(endXCursor + 3.0f, endYCursor + 3.0f),
+            IM_COL32(255, 0, 0, 192)
+        );
+
+        ImGui::End();
+
+
+        ImGui::SetNextWindowSize(ImVec2(1280, ImGui::GetIO().DisplaySize.y - 720));
+        ImGui::SetNextWindowPos(ImVec2(0, 721));
+        ImGui::Begin("Wall Parameters");
         //Parameters for wall
         static int wall_x1 = 1;
         static int wall_y1 = 1;
@@ -213,16 +253,6 @@ int main() {
         if (ImGui::Button("Reset Wall")) {
             wall.clear();
         }
-
-        float currXCursor = static_cast<float>(x);
-        float currYCursor = static_cast<float>(720 - y);
-
-        drawList->AddRectFilled(
-            ImVec2(currXCursor - 3.0f, currYCursor - 3.0f),
-            ImVec2(currXCursor + 3.0f, currYCursor + 3.0f),
-            IM_COL32(255, 255, 0, 192)
-        );
-
         ImGui::End();
 
 
