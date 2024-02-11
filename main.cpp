@@ -9,6 +9,7 @@
 #include <math.h>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -102,6 +103,16 @@ int main() {
     double lastDisplayTime = glfwGetTime();
     double currentFramerate = io.Framerate;
 
+    static int sx = 1;
+    static int sy = 1;
+    static int ex = 1;
+    static int ey = 1;
+    static float startSpeed = 10.0f;
+    static float endSpeed = 10.0f;
+    static float startAngle = 0.0f;
+    static float endAngle = 0.0f;
+    static int numAddParticles = 1;
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -166,15 +177,7 @@ int main() {
         ImGui::SetNextWindowPos(ImVec2(1281, 0));
 
         ImGui::Begin("[Start-End Point] Batch Adding");
-        static int sx = 1;
-        static int sy = 1;
-        static int ex = 1;
-        static int ey = 1;
-        static float startSpeed = 10.0f;
-        static float endSpeed = 10.0f;
-        static float startAngle = 0.0f;
-        static float endAngle = 0.0f;
-        static int numAddParticles = 1;
+        
         ImGui::Text("Particle Count: %d", particles.size());
 
         ImGui::SliderInt("[Start Point] - x", &sx, 1, 1280);
@@ -186,8 +189,8 @@ int main() {
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
 
-            float xSpacing = static_cast<float>((ex-sx) / numAddParticles);
-            float ySpacing = static_cast<float>((ey-sy) / numAddParticles);
+            float xSpacing = static_cast<float>(ex-sx) / numAddParticles;
+            float ySpacing = static_cast<float>(ey-sy) / numAddParticles;
             float xSpacingSum = 0.0f;
             float ySpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; ++i) {
