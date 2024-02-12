@@ -66,6 +66,42 @@ void UpdateParticles(ImGuiIO& io) {
             particle.position.y <= 0 || particle.position.y > 720) {
             AdjustParticlePosition(particle);
         }
+        //Checks if there are user-defined walls 
+        for (const auto& wallSegment : wall) {
+            ImVec2 wallP1 = wallSegment.p1;
+            ImVec2 wallP2 = wallSegment.p2;
+
+            ImVec2 d = ImVec2(wallP2.x - wallP1.x, wallP2.y - wallP1.y);
+            ImVec2 w = ImVec2(particle.position.x - wallP1.x, particle.position.y - wallP1.y);
+
+            float dot = w.x * d.x + w.y * d.y;
+            float len2 = d.x * d.x + d.y * d.y;
+
+            float t = dot / len2;
+
+            if (t < 0.0f) {
+                t = 0.0f;
+            }
+            else if (t > 1.0f) {
+                t = 1.0f;
+            }
+
+            ImVec2 closestPoint = ImVec2(wallP1.x + t * d.x, wallP1.y + t * d.y);
+            float distanceSq = (particle.position.x - closestPoint.x) * (particle.position.x - closestPoint.x) +
+                (particle.position.y - closestPoint.y) * (particle.position.y - closestPoint.y);
+
+            if (distanceSq < 2.25f) { // Consider particles to have collided if they are within a small distance
+                // Calculate the reflection vector
+                ImVec2 normal = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
+                float length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+                normal = ImVec2(normal.x / length, normal.y / length);
+
+                // Reflect the velocity vector
+                float dotProduct = 2.0f * (particle.velocity.x * normal.x + particle.velocity.y * normal.y);
+                particle.velocity.x -= dotProduct * normal.x;
+                particle.velocity.y -= dotProduct * normal.y;
+            }
+        }
     }
 }
 
