@@ -142,10 +142,10 @@ int main() {
     double lastDisplayTime = glfwGetTime();
     double currentFramerate = io.Framerate;
 
-    static int sx = 1;
-    static int sy = 1;
-    static int ex = 1;
-    static int ey = 1;
+    static int sx = 0;
+    static int sy = 0;
+    static int ex = 0;
+    static int ey = 0;
     static float startSpeed = 10.0f;
     static float endSpeed = 10.0f;
     static float startAngle = 0.0f;
@@ -222,12 +222,12 @@ int main() {
         ImGui::SliderInt("[End Point] - x", &ex, 0, 1279);
         ImGui::SliderInt("[End Point] - y", &ey, 0, 719);
         ImGui::InputFloat("[Start Velocity] pix/s", &startSpeed);
-        ImGui::SliderFloat("[Start Angle] - degrees", &startAngle, 0.0f, 359.0f);
+        ImGui::SliderFloat("[Start Angle] - degrees", &startAngle, 0.0f, 359.999f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
 
-            float xSpacing = static_cast<float>(ex-sx) / numAddParticles;
-            float ySpacing = static_cast<float>(ey-sy) / numAddParticles;
+            float xSpacing = static_cast<float>(ex-sx) / (numAddParticles-1);
+            float ySpacing = static_cast<float>(ey-sy) / (numAddParticles-1);
             float xSpacingSum = 0.0f;
             float ySpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; i++) {
@@ -284,8 +284,8 @@ int main() {
         ImGui::SliderInt("[Start Point] - x", &sx, 0, 1279);
         ImGui::SliderInt("[Start Point] - y", &sy, 0, 719);
         ImGui::InputFloat("[Start Velocity] pix/s", &startSpeed);
-        ImGui::SliderFloat("[Start Angle] - degrees", &startAngle, 0.0f, 359.0f);
-        ImGui::SliderFloat("[End Angle] - degrees", &endAngle, 0.0f, 359.0f);
+        ImGui::SliderFloat("[Start Angle] - degrees", &startAngle, 0.0f, 359.999f);
+        ImGui::SliderFloat("[End Angle] - degrees", &endAngle, 0.0f, 359.999f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
             float angleDiff;
@@ -294,7 +294,7 @@ int main() {
             else
                 angleDiff = endAngle - abs(startAngle - 360);
 
-            float angleSpacing = static_cast<float>(angleDiff / numAddParticles);
+            float angleSpacing = static_cast<float>(angleDiff / (numAddParticles));
             float angleSpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; i++) {
                 Particle particle;
@@ -320,11 +320,11 @@ int main() {
         ImGui::SliderInt("[Start Point] - y", &sy, 0, 719);
         ImGui::InputFloat("[Start Velocity] pix/s", &startSpeed);
         ImGui::InputFloat("[End Velocity] pix/s", &endSpeed);
-        ImGui::SliderFloat("Start Angle - degrees", &startAngle, 0.0f, 359.0f);
+        ImGui::SliderFloat("Start Angle - degrees", &startAngle, 0.0f, 359.999f);
         ImGui::InputInt("Number of Particles", &numAddParticles);
         if (ImGui::Button("Add")) {
 
-            float vSpacing = static_cast<float>(endSpeed-startSpeed) / numAddParticles;
+            float vSpacing = static_cast<float>(endSpeed-startSpeed) / (numAddParticles);
             float vSpacingSum = 0.0f;
             for (int i = 0; i < numAddParticles; i++) {
                 Particle particle;
