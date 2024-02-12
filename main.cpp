@@ -202,7 +202,7 @@ int main() {
             drawList->AddLine(
                 walls.p1,
                 walls.p2,
-                IM_COL32(255, 0, 0, 255),
+                IM_COL32(0, 0, 255, 255),
                 2.0f // Line thickness
             );
         }
@@ -367,19 +367,19 @@ int main() {
             wall.clear();
         }
 
-        ImVec2 flippedWallP1 = ImVec2(wall_x1, 720 - wall_y1);
-        ImVec2 flippedWallP2 = ImVec2(wall_x2, 720 - wall_y2);
+        ImVec2 flippedWallP1 = ImVec2(static_cast<float>(wall_x1), static_cast<float>(720 - wall_y1));
+        ImVec2 flippedWallP2 = ImVec2(static_cast<float>(wall_x2), static_cast<float>(720 - wall_y2));
         //Endpoints 1
         drawList->AddRectFilled(
             ImVec2(flippedWallP1.x - 3.0f, flippedWallP1.y - 3.0f),
             ImVec2(flippedWallP1.x + 3.0f, flippedWallP1.y + 3.0f),
-            IM_COL32(0, 255, 0, 255)
+            IM_COL32(0, 0, 255, 255)
         );
         //Endpoints 2
         drawList->AddRectFilled(
             ImVec2(flippedWallP2.x - 3.0f, flippedWallP2.y - 3.0f),
             ImVec2(flippedWallP2.x + 3.0f, flippedWallP2.y + 3.0f),
-            IM_COL32(0, 255, 0, 255)
+            IM_COL32(0, 0, 255, 255)
         );
         ImGui::End();
 
