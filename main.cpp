@@ -100,6 +100,10 @@ void UpdateParticles(ImGuiIO& io) {
                 float dotProduct = 2.0f * (particle.velocity.x * normal.x + particle.velocity.y * normal.y);
                 particle.velocity.x -= dotProduct * normal.x;
                 particle.velocity.y -= dotProduct * normal.y;
+
+                // Move the particle slightly away from the collision point
+                particle.position.x += normal.x * 0.1f;
+                particle.position.y += normal.y * 0.1f;
             }
         }
     }
