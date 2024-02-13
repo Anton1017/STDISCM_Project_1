@@ -503,10 +503,10 @@ int main() {
         static int wall_y2 = 1;
         ImGui::Text("Wall Count: %d", wall.size());
         ImGui::Text("Endpoint 1");
-        ImGui::SliderInt("X1", &wall_x1, 0, 1219);
+        ImGui::SliderInt("X1", &wall_x1, 0, 1279);
         ImGui::SliderInt("Y1", &wall_y1, 0, 719);
         ImGui::Text("Endpoint 2");
-        ImGui::SliderInt("X2", &wall_x2, 0, 1219);
+        ImGui::SliderInt("X2", &wall_x2, 0, 1279);
         ImGui::SliderInt("Y2", &wall_y2, 0, 719);
         if (ImGui::Button("Add Wall")) {
             Walls newWall = { ImVec2(static_cast<float>(wall_x1), static_cast<float>(720 - wall_y1)), ImVec2(static_cast<float>(wall_x2), static_cast<float>(720 - wall_y2)) };
