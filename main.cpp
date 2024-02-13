@@ -109,6 +109,7 @@ void UpdateParticles(ImGuiIO& io) {
             ImVec2 wallP1 = wallSegment.p1;
             ImVec2 wallP2 = wallSegment.p2;
 
+            // calculate projected position of particle on next frame (assuming no collision with wall)
             ImVec2 nextPosition = ImVec2(
                 particle.position.x + particle.velocity.x / io.Framerate,
                 particle.position.y + particle.velocity.y / io.Framerate
