@@ -154,8 +154,7 @@ ImVec2 particleIntersectWall(Particle particle, ImVec2 wallStart, ImVec2 wallEnd
 //        }
 //    }
 //}
-void UpdateParticles(ImGuiIO& io) {
-    float frameRate = io.Framerate;
+std::vector<std::pair<int,int>> getJobList() {
     int particlesSize = static_cast<int>(particles.size());
     std::vector<std::pair<int,int>> jobList;
 
@@ -198,6 +197,13 @@ void UpdateParticles(ImGuiIO& io) {
             }
         }
     }
+    return jobList;
+}
+
+
+void UpdateParticles(ImGuiIO& io) {
+    float frameRate = io.Framerate;
+    std::vector<std::pair<int,int>> jobList = getJobList();
 
     for (auto& job : jobList){
         pool.detach_task( // assign to threadpool
