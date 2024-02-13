@@ -20,7 +20,7 @@
 #endif
 
 #define THREADPOOL_SIZE std::thread::hardware_concurrency()
-#define THREADING_THRESHOLD 20000
+#define THREADING_THRESHOLD 5000
 
 struct Particle {
     ImVec2 position;
@@ -299,7 +299,7 @@ int main() {
     static float startAngle = 0.0f;
     static float endAngle = 0.0f;
     static int numAddParticles = 1;
-    std::cout << "Threadpool size: " << std::thread::hardware_concurrency() << std::endl;
+    std::cout << "Threadpool size: " << THREADPOOL_SIZE << std::endl;
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
