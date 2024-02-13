@@ -4,6 +4,8 @@
 #include <imgui_impl_opengl3.h>
 
 #include <iostream>
+#include <string>
+#include <sstream>
 #include <vector>
 #include <cmath>
 #include <math.h>
@@ -55,42 +57,69 @@ void AdjustParticlePosition(Particle& particle) {
     }
 }
 
+float calculateSlope(ImVec2 p1, ImVec2 p2) {
+    return (p2.y - p1.y) / (p2.x - p1.x);
+}
+
+
+bool doIntersect(ImVec2 p1, ImVec2 q1, ImVec2 p2, ImVec2 q2) {
+    // Calculate slopes of the lines
+    float slope1 = calculateSlope(p1, q1);
+    float slope2 = calculateSlope(p2, q2);
+
+    // If slopes are equal, the lines are either parallel or coincident
+    if (slope1 == slope2) {
+        return false;
+    }
+
+    // Calculate y-intercepts (b values) for each line
+    float b1 = p1.y - slope1 * p1.x;
+    float b2 = p2.y - slope2 * p2.x;
+
+    // Calculate intersection point
+    float intersectionX = (b2 - b1) / (slope1 - slope2);
+    float intersectionY = slope1 * intersectionX + b1;
+
+    // Check if the intersection point lies on both line segments
+    if ((intersectionX >= std::min(p1.x, q1.x) && intersectionX <= std::max(p1.x, q1.x)) &&
+        (intersectionY >= std::min(p1.y, q1.y) && intersectionY <= std::max(p1.y, q1.y)) &&
+        (intersectionX >= std::min(p2.x, q2.x) && intersectionX <= std::max(p2.x, q2.x)) &&
+        (intersectionY >= std::min(p2.y, q2.y) && intersectionY <= std::max(p2.y, q2.y))) {
+        return true;
+    }
+
+    return false;
+}
+
+ImVec2 particleIntersectWall(Particle particle, ImVec2 wallStart, ImVec2 wallEnd) {
+    // Calculate the intersection point of the particle's trajectory with the wall
+    float t_intersection = (wallStart.x * (particle.position.y - wallEnd.y) + wallEnd.x * (wallStart.y - particle.position.y) +
+                            particle.position.x * (wallEnd.y - wallStart.y)) /
+                           (particle.velocity.x * (wallStart.y - wallEnd.y) + particle.velocity.y * (wallEnd.x - wallStart.x));
+
+    // Calculate the intersection point
+    return ImVec2{particle.position.x + t_intersection * particle.velocity.x, particle.position.y + t_intersection * particle.velocity.y};
+}
+
 
 void UpdateParticles(ImGuiIO& io) {
     for (auto& particle : particles) {
-        particle.position.x += particle.velocity.x / io.Framerate;
-        particle.position.y += particle.velocity.y / io.Framerate;
-
-        // Bounce off the walls
-        if (particle.position.x <= 0 || particle.position.x > 1280 ||
-            particle.position.y <= 0 || particle.position.y > 720) {
-            AdjustParticlePosition(particle);
-        }
-        //Checks if there are user-defined walls 
+        // Check for collision with the walls
         for (const auto& wallSegment : wall) {
             ImVec2 wallP1 = wallSegment.p1;
             ImVec2 wallP2 = wallSegment.p2;
 
-            ImVec2 d = ImVec2(wallP2.x - wallP1.x, wallP2.y - wallP1.y);
-            ImVec2 w = ImVec2(particle.position.x - wallP1.x, particle.position.y - wallP1.y);
+            ImVec2 nextPosition = ImVec2(
+                particle.position.x + particle.velocity.x / io.Framerate,
+                particle.position.y + particle.velocity.y / io.Framerate
+            );
 
-            float dot = w.x * d.x + w.y * d.y;
-            float len2 = d.x * d.x + d.y * d.y;
+            if (doIntersect(particle.position, nextPosition, wallP1, wallP2)) {
+                ImVec2 intersectPoint = particleIntersectWall(particle, wallP1, wallP2);
+                // Collision occurred, update position and reflect velocity
+                particle.position.x = intersectPoint.x;
+                particle.position.y = intersectPoint.y;
 
-            float t = dot / len2;
-
-            if (t < 0.0f) {
-                t = 0.0f;
-            }
-            else if (t > 1.0f) {
-                t = 1.0f;
-            }
-
-            ImVec2 closestPoint = ImVec2(wallP1.x + t * d.x, wallP1.y + t * d.y);
-            float distanceSq = (particle.position.x - closestPoint.x) * (particle.position.x - closestPoint.x) +
-                (particle.position.y - closestPoint.y) * (particle.position.y - closestPoint.y);
-
-            if (distanceSq < 2.25f) { // Consider particles to have collided if they are within a small distance
                 // Calculate the reflection vector
                 ImVec2 normal = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
                 float length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
@@ -106,8 +135,20 @@ void UpdateParticles(ImGuiIO& io) {
                 particle.position.y += normal.y * 0.1f;
             }
         }
+
+        // Update particle's position based on its velocity
+        particle.position.x += particle.velocity.x / io.Framerate;
+        particle.position.y += particle.velocity.y / io.Framerate;
+
+        // Bounce off the walls
+        if (particle.position.x <= 0 || particle.position.x > 1280 ||
+            particle.position.y <= 0 || particle.position.y > 720) {
+            AdjustParticlePosition(particle);
+        }
     }
 }
+
+
 
 
 int main() {
@@ -173,7 +214,7 @@ int main() {
         ImGui::Begin("Framerate", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
         if (currentTime - lastDisplayTime >= 0.5) { //0.5s
             currentFramerate = io.Framerate;
-            std::cout << "Framerate: " << currentFramerate << " FPS" << std::endl;
+            // std::cout << "Framerate: " << currentFramerate << " FPS" << std::endl;
             lastDisplayTime = currentTime;
         }
         ImGui::Text("%.3f FPS", currentFramerate);
