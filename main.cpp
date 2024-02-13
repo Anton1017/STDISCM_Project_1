@@ -102,6 +102,52 @@ ImVec2 particleIntersectWall(Particle particle, ImVec2 wallStart, ImVec2 wallEnd
 }
 
 
+//void UpdateParticles(ImGuiIO& io) {
+//    for (auto& particle : particles) {
+//        // Check for collision with the walls
+//        for (const auto& wallSegment : wall) {
+//            ImVec2 wallP1 = wallSegment.p1;
+//            ImVec2 wallP2 = wallSegment.p2;
+//
+//            // calculate projected position of particle on next frame (assuming no collision with wall)
+//            ImVec2 nextPosition = ImVec2(
+//                particle.position.x + particle.velocity.x / io.Framerate,
+//                particle.position.y + particle.velocity.y / io.Framerate
+//            );
+//
+//            if (doIntersect(particle.position, nextPosition, wallP1, wallP2)) {
+//                ImVec2 intersectPoint = particleIntersectWall(particle, wallP1, wallP2);
+//                // Collision occurred, update position and reflect velocity
+//                particle.position.x = intersectPoint.x;
+//                particle.position.y = intersectPoint.y;
+//
+//                // Calculate the reflection vector
+//                ImVec2 normal = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
+//                float length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
+//                normal = ImVec2(normal.x / length, normal.y / length);
+//
+//                // Reflect the velocity vector
+//                float dotProduct = 2.0f * (particle.velocity.x * normal.x + particle.velocity.y * normal.y);
+//                particle.velocity.x -= dotProduct * normal.x;
+//                particle.velocity.y -= dotProduct * normal.y;
+//
+//                // Move the particle slightly away from the collision point
+//                particle.position.x += normal.x * 0.1f;
+//                particle.position.y += normal.y * 0.1f;
+//            }
+//        }
+//
+//        // Update particle's position based on its velocity
+//        particle.position.x += particle.velocity.x / io.Framerate;
+//        particle.position.y += particle.velocity.y / io.Framerate;
+//
+//        // Bounce off the walls
+//        if (particle.position.x <= 0 || particle.position.x > 1280 ||
+//            particle.position.y <= 0 || particle.position.y > 720) {
+//            AdjustParticlePosition(particle);
+//        }
+//    }
+//}
 void UpdateParticles(ImGuiIO& io) {
     for (auto& particle : particles) {
         // Check for collision with the walls
@@ -121,19 +167,19 @@ void UpdateParticles(ImGuiIO& io) {
                 particle.position.x = intersectPoint.x;
                 particle.position.y = intersectPoint.y;
 
-                // Calculate the reflection vector
-                ImVec2 normal = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
-                float length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
-                normal = ImVec2(normal.x / length, normal.y / length);
+                // Calculate the reflection vector based on the wall's normal
+                ImVec2 wallVector = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
+                float length = std::sqrt(wallVector.x * wallVector.x + wallVector.y * wallVector.y);
+                wallVector = ImVec2(wallVector.x / length, wallVector.y / length);
 
                 // Reflect the velocity vector
-                float dotProduct = 2.0f * (particle.velocity.x * normal.x + particle.velocity.y * normal.y);
-                particle.velocity.x -= dotProduct * normal.x;
-                particle.velocity.y -= dotProduct * normal.y;
+                float dotProduct = 2.0f * (particle.velocity.x * wallVector.x + particle.velocity.y * wallVector.y);
+                particle.velocity.x -= dotProduct * wallVector.x;
+                particle.velocity.y -= dotProduct * wallVector.y;
 
                 // Move the particle slightly away from the collision point
-                particle.position.x += normal.x * 0.1f;
-                particle.position.y += normal.y * 0.1f;
+                particle.position.x += wallVector.x * 0.1f;
+                particle.position.y += wallVector.y * 0.1f;
             }
         }
 
