@@ -2,6 +2,8 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include "BS_thread_pool.hpp" // BS::thread_pool from https://github.com/bshoshany/thread-pool
+#include "BS_thread_pool_utils.hpp"
 
 #include <iostream>
 #include <string>
@@ -17,6 +19,9 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#define THREADPOOL_SIZE std::thread::hardware_concurrency()
+#define THREADING_THRESHOLD 20000
+
 struct Particle {
     ImVec2 position;
     ImVec2 velocity;
@@ -25,6 +30,7 @@ struct Particle {
 
 const int numParticles = 0;
 std::vector<Particle> particles;
+BS::thread_pool pool(THREADPOOL_SIZE);
 
 struct Walls {
     ImVec2 p1;
@@ -149,50 +155,104 @@ ImVec2 particleIntersectWall(Particle particle, ImVec2 wallStart, ImVec2 wallEnd
 //    }
 //}
 void UpdateParticles(ImGuiIO& io) {
-    for (auto& particle : particles) {
-        // Check for collision with the walls
-        for (const auto& wallSegment : wall) {
-            ImVec2 wallP1 = wallSegment.p1;
-            ImVec2 wallP2 = wallSegment.p2;
+    float frameRate = io.Framerate;
+    int particlesSize = static_cast<int>(particles.size());
+    std::vector<std::pair<int,int>> jobList;
 
-            // calculate projected position of particle on next frame (assuming no collision with wall)
-            ImVec2 nextPosition = ImVec2(
-                particle.position.x + particle.velocity.x / io.Framerate,
-                particle.position.y + particle.velocity.y / io.Framerate
-            );
-
-            if (doIntersect(particle.position, nextPosition, wallP1, wallP2)) {
-                ImVec2 intersectPoint = particleIntersectWall(particle, wallP1, wallP2);
-                // Collision occurred, update position and reflect velocity
-                particle.position.x = intersectPoint.x;
-                particle.position.y = intersectPoint.y;
-
-                // Calculate the reflection vector based on the wall's normal
-                ImVec2 wallVector = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
-                float length = std::sqrt(wallVector.x * wallVector.x + wallVector.y * wallVector.y);
-                wallVector = ImVec2(wallVector.x / length, wallVector.y / length);
-
-                // Reflect the velocity vector
-                float dotProduct = 2.0f * (particle.velocity.x * wallVector.x + particle.velocity.y * wallVector.y);
-                particle.velocity.x -= dotProduct * wallVector.x;
-                particle.velocity.y -= dotProduct * wallVector.y;
-
-                // Move the particle slightly away from the collision point
-                particle.position.x += wallVector.x * 0.1f;
-                particle.position.y += wallVector.y * 0.1f;
+    int threadJobChunk = particlesSize / THREADPOOL_SIZE;
+    int i = 0;
+    int j = 0;
+    if(threadJobChunk < THREADING_THRESHOLD){
+        while(particlesSize != 0){
+            if(particlesSize - THREADING_THRESHOLD > 0){
+                j += THREADING_THRESHOLD - 1;
+                jobList.push_back(std::pair(i,j));
+                particlesSize -= THREADING_THRESHOLD;
+                i =+ j + 1;
+                ++j;
+            }else{
+                j += particlesSize - 1;
+                jobList.push_back(std::pair(i,j));
+                particlesSize = 0;
+            }
+            
+        }
+    } else{
+        int jobRemainder = particlesSize % THREADPOOL_SIZE;
+        while(particlesSize != 0){
+            if(particlesSize - threadJobChunk > 0){
+                j += threadJobChunk - 1;
+                if(jobRemainder > 0){
+                    ++j;
+                    --jobRemainder;
+                    --particlesSize;
+                }
+                jobList.push_back(std::pair(i,j));
+                particlesSize -= threadJobChunk;
+                i = j + 1;
+                ++j;
+            }else{
+                j += particlesSize - 1;
+                jobList.push_back(std::pair(i,j));
+                particlesSize = 0;
             }
         }
-
-        // Update particle's position based on its velocity
-        particle.position.x += particle.velocity.x / io.Framerate;
-        particle.position.y += particle.velocity.y / io.Framerate;
-
-        // Bounce off the walls
-        if (particle.position.x <= 0 || particle.position.x > 1280 ||
-            particle.position.y <= 0 || particle.position.y > 720) {
-            AdjustParticlePosition(particle);
-        }
     }
+
+    for (auto& job : jobList){
+        pool.detach_task( // assign to threadpool
+            [&frameRate, &job]
+            {
+                for (int i = job.first; i <= job.second; i++) {
+                    // Check for collision with the walls
+                    for (const auto& wallSegment : wall) {
+                        ImVec2 wallP1 = wallSegment.p1;
+                        ImVec2 wallP2 = wallSegment.p2;
+
+                        // calculate projected position of particle on next frame (assuming no collision with wall)
+                        ImVec2 nextPosition = ImVec2(
+                            particles[i].position.x + particles[i].velocity.x / frameRate,
+                            particles[i].position.y + particles[i].velocity.y / frameRate
+                        );
+
+                        if (doIntersect(particles[i].position, nextPosition, wallP1, wallP2)) {
+                            ImVec2 intersectPoint = particleIntersectWall(particles[i], wallP1, wallP2);
+                            // Collision occurred, update position and reflect velocity
+                            particles[i].position.x = intersectPoint.x;
+                            particles[i].position.y = intersectPoint.y;
+
+                            // Calculate the reflection vector based on the wall's normal
+                            ImVec2 wallVector = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
+                            float length = std::sqrt(wallVector.x * wallVector.x + wallVector.y * wallVector.y);
+                            wallVector = ImVec2(wallVector.x / length, wallVector.y / length);
+
+                            // Reflect the velocity vector
+                            float dotProduct = 2.0f * (particles[i].velocity.x * wallVector.x + particles[i].velocity.y * wallVector.y);
+                            particles[i].velocity.x -= dotProduct * wallVector.x;
+                            particles[i].velocity.y -= dotProduct * wallVector.y;
+
+                            // Move the particle slightly away from the collision point
+                            particles[i].position.x += wallVector.x * 0.1f;
+                            particles[i].position.y += wallVector.y * 0.1f;
+                        }
+                    }
+
+                    // Update particle's position based on its velocity
+                    particles[i].position.x += particles[i].velocity.x / frameRate;
+                    particles[i].position.y += particles[i].velocity.y / frameRate;
+
+                    // Bounce off the walls
+                    if (particles[i].position.x <= 0 || particles[i].position.x > 1280 ||
+                        particles[i].position.y <= 0 || particles[i].position.y > 720) {
+                        AdjustParticlePosition(particles[i]);
+                    }
+                }
+                // std::cout << "fin " << job.first << " " << job.second << std::endl;
+            }
+                
+        );
+    }
+    pool.wait();
 }
 
 
@@ -239,6 +299,7 @@ int main() {
     static float startAngle = 0.0f;
     static float endAngle = 0.0f;
     static int numAddParticles = 1;
+    std::cout << "Threadpool size: " << std::thread::hardware_concurrency() << std::endl;
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
