@@ -19,7 +19,8 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define THREADPOOL_SIZE std::thread::hardware_concurrency()
+int threadpool_size = std::thread::hardware_concurrency() != 0 ? std::thread::hardware_concurrency() : 4;
+#define THREADPOOL_SIZE threadpool_size
 #define THREADING_THRESHOLD 5000
 
 struct Particle {
