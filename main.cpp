@@ -20,7 +20,7 @@
 #endif
 
 int threadpool_size = std::thread::hardware_concurrency() != 0 ? std::thread::hardware_concurrency() : 4;
-#define THREADPOOL_SIZE threadpool_size
+#define THREADPOOL_SIZE threadpool_size - 1
 #define THREADING_THRESHOLD 5000
 
 struct Particle {
@@ -172,7 +172,7 @@ std::vector<std::pair<int,int>> getJobList() {
 }
 
 
-void UpdateParticles(ImGuiIO& io) {
+void UpdateParticles(ImGuiIO& io, ImDrawList* drawList) {
     float frameRate = io.Framerate;
     std::vector<std::pair<int,int>> jobList = getJobList();
 
@@ -229,6 +229,18 @@ void UpdateParticles(ImGuiIO& io) {
                 
         );
     }
+    pool.detach_task(
+        [&drawList]{
+            for (const auto& particle : particles) {
+
+                drawList->AddRectFilled(
+                    ImVec2(particle.position.x - 1.5f, particle.position.y - 1.5f),
+                    ImVec2(particle.position.x + 1.5f, particle.position.y + 1.5f),
+                    IM_COL32(255, 255, 255, 255)
+                );
+            }
+        }
+    );
     pool.wait();
 }
 
@@ -316,14 +328,6 @@ int main() {
         ImGui::Begin("Particle Simulation", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 
         ImDrawList* drawList = ImGui::GetWindowDrawList();
-        for (const auto& particle : particles) {
-
-            drawList->AddRectFilled(
-                ImVec2(particle.position.x - 1.5f, particle.position.y - 1.5f),
-                ImVec2(particle.position.x + 1.5f, particle.position.y + 1.5f),
-                IM_COL32(255, 255, 255, 255)
-            );
-        }
         for (const auto& walls : wall) {
             drawList->AddLine(
                 walls.p1,
@@ -511,7 +515,7 @@ int main() {
 
 
         // Update and render particles
-        UpdateParticles(io);
+        UpdateParticles(io, drawList);
 
         // ImGui rendering
         ImGui::Render();
