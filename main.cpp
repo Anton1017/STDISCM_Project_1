@@ -65,17 +65,20 @@ void AdjustParticlePosition(Particle& particle) {
 }
 
 float calculateSlope(ImVec2 p1, ImVec2 p2) {
+    if (p2.x - p1.x == 0.0f)
+        // if vertical line
+        return std::numeric_limits<float>::infinity();
     return (p2.y - p1.y) / (p2.x - p1.x);
 }
 
-
 bool doIntersect(ImVec2 p1, ImVec2 q1, ImVec2 p2, ImVec2 q2) {
-    // Calculate slopes of the lines
+    // Calculate slopes of the line and particle traj.
     float slope1 = calculateSlope(p1, q1);
     float slope2 = calculateSlope(p2, q2);
 
-    // If slopes are equal, the lines are either parallel or coincident
-    if (slope1 == slope2) {
+    // Check for vertical lines
+    if (std::isinf(slope1) && std::isinf(slope2)) {
+        // Both line and particle traj. are vertical and never intersect
         return false;
     }
 
@@ -84,17 +87,31 @@ bool doIntersect(ImVec2 p1, ImVec2 q1, ImVec2 p2, ImVec2 q2) {
     float b2 = p2.y - slope2 * p2.x;
 
     // Calculate intersection point
-    float intersectionX = (b2 - b1) / (slope1 - slope2);
-    float intersectionY = slope1 * intersectionX + b1;
+    float intersectionX;
+    float intersectionY;
 
-    // Check if the intersection point lies on both line segments
-    if ((intersectionX >= std::min(p1.x, q1.x) && intersectionX <= std::max(p1.x, q1.x)) &&
+    if (std::isinf(slope1)) {
+        // Line is vertical
+        intersectionX = p1.x;
+        intersectionY = slope2 * intersectionX + b2;
+    } else if (std::isinf(slope2)) {
+        // Particle traj. is vertical
+        intersectionX = p2.x;
+        intersectionY = slope1 * intersectionX + b1;
+    } else {
+        // Neither line nor particle is vertical
+        intersectionX = (b2 - b1) / (slope1 - slope2);
+        intersectionY = slope1 * intersectionX + b1;
+    }
+
+    // Check if the intersection point lies on both line and particle traj.
+    if (!std::isnan(intersectionX) && !std::isnan(intersectionY) &&
+        (intersectionX >= std::min(p1.x, q1.x) && intersectionX <= std::max(p1.x, q1.x)) &&
         (intersectionY >= std::min(p1.y, q1.y) && intersectionY <= std::max(p1.y, q1.y)) &&
         (intersectionX >= std::min(p2.x, q2.x) && intersectionX <= std::max(p2.x, q2.x)) &&
         (intersectionY >= std::min(p2.y, q2.y) && intersectionY <= std::max(p2.y, q2.y))) {
         return true;
     }
-
     return false;
 }
 
@@ -108,53 +125,6 @@ ImVec2 particleIntersectWall(Particle particle, ImVec2 wallStart, ImVec2 wallEnd
     return ImVec2{particle.position.x + t_intersection * particle.velocity.x, particle.position.y + t_intersection * particle.velocity.y};
 }
 
-
-//void UpdateParticles(ImGuiIO& io) {
-//    for (auto& particle : particles) {
-//        // Check for collision with the walls
-//        for (const auto& wallSegment : wall) {
-//            ImVec2 wallP1 = wallSegment.p1;
-//            ImVec2 wallP2 = wallSegment.p2;
-//
-//            // calculate projected position of particle on next frame (assuming no collision with wall)
-//            ImVec2 nextPosition = ImVec2(
-//                particle.position.x + particle.velocity.x / io.Framerate,
-//                particle.position.y + particle.velocity.y / io.Framerate
-//            );
-//
-//            if (doIntersect(particle.position, nextPosition, wallP1, wallP2)) {
-//                ImVec2 intersectPoint = particleIntersectWall(particle, wallP1, wallP2);
-//                // Collision occurred, update position and reflect velocity
-//                particle.position.x = intersectPoint.x;
-//                particle.position.y = intersectPoint.y;
-//
-//                // Calculate the reflection vector
-//                ImVec2 normal = ImVec2(wallP2.y - wallP1.y, wallP1.x - wallP2.x); // Perpendicular to the wall
-//                float length = std::sqrt(normal.x * normal.x + normal.y * normal.y);
-//                normal = ImVec2(normal.x / length, normal.y / length);
-//
-//                // Reflect the velocity vector
-//                float dotProduct = 2.0f * (particle.velocity.x * normal.x + particle.velocity.y * normal.y);
-//                particle.velocity.x -= dotProduct * normal.x;
-//                particle.velocity.y -= dotProduct * normal.y;
-//
-//                // Move the particle slightly away from the collision point
-//                particle.position.x += normal.x * 0.1f;
-//                particle.position.y += normal.y * 0.1f;
-//            }
-//        }
-//
-//        // Update particle's position based on its velocity
-//        particle.position.x += particle.velocity.x / io.Framerate;
-//        particle.position.y += particle.velocity.y / io.Framerate;
-//
-//        // Bounce off the walls
-//        if (particle.position.x <= 0 || particle.position.x > 1280 ||
-//            particle.position.y <= 0 || particle.position.y > 720) {
-//            AdjustParticlePosition(particle);
-//        }
-//    }
-//}
 std::vector<std::pair<int,int>> getJobList() {
     int particlesSize = static_cast<int>(particles.size());
     std::vector<std::pair<int,int>> jobList;
@@ -207,7 +177,7 @@ void UpdateParticles(ImGuiIO& io) {
     std::vector<std::pair<int,int>> jobList = getJobList();
 
     for (auto& job : jobList){
-        pool.detach_task( // assign to threadpool
+        pool.detach_task( // Assign to threadpool
             [&frameRate, &job]
             {
                 for (int i = job.first; i <= job.second; i++) {
