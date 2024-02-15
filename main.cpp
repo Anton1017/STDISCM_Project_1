@@ -19,9 +19,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-int threadpool_size = std::thread::hardware_concurrency() != 0 ? std::thread::hardware_concurrency() : 4;
-#define THREADPOOL_SIZE threadpool_size - 1
-#define THREADING_THRESHOLD 5000
+// default thread count is 4 (single and dual-core systems may be assigned with 4 threads)
+int threadpool_size = std::thread::hardware_concurrency() > 2 ? std::thread::hardware_concurrency() : 4; 
+#define THREADPOOL_SIZE threadpool_size - 1 // save one thread for rendering
+#define THREADING_THRESHOLD 5000 // Obtained from testing, point on which single-threaded performance starts to drop in FPS
 
 struct Particle {
     ImVec2 position;
