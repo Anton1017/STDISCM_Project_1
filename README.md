@@ -1,6 +1,9 @@
 ## Usage Instructions
 - Download the libraries used through this [link](https://drive.google.com/file/d/1WYh7ZnrMbhtwgByEr5ZQEsxh3n9TsQEk/view?usp=drive_link).
 - Extract the folders of the libraries in the project directory.
+- The folder should look like the image below
+![VS_image_folder](https://github.com/Anton1017/STDISCM_Project_1/assets/104416742/6f2fa804-d3c2-4402-b486-bd3e19aff1eb)
+
 
 ### There are two ways to build the program:
 #### In Visual Studio (2022):
