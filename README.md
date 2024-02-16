@@ -1,9 +1,9 @@
 ## Usage Instructions
 - Download the libraries used through this [link](https://drive.google.com/file/d/1WYh7ZnrMbhtwgByEr5ZQEsxh3n9TsQEk/view?usp=drive_link).
-- Extract the folders of the libraries in the project directory
+- Extract the folders of the libraries in the project directory.
 
 ### There are two ways to build the program:
-#### In Visual Studio (2022)
+#### In Visual Studio (2022):
 -
 
 #### In Visual Studio Code:
