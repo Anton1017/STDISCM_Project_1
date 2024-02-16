@@ -7,7 +7,7 @@
 -
 
 #### In Visual Studio Code:
-- Install C++ from the MinGW-w64 toolchain and configure the necessary environmental variables
+- Utilize MSVC compiler by downloading Visual Studio 2022
 - Run the following code in the project directory:
 ```
 cmake -S . -B build
