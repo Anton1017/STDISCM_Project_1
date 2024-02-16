@@ -4,7 +4,8 @@
 
 ### There are two ways to build the program:
 #### In Visual Studio (2022):
--
+- Click the button to run the file (image below for reference)
+![VS_image](https://github.com/Anton1017/STDISCM_Project_1/assets/104416742/e618af2b-f86f-4b6b-a0cf-7e7babf9d25d)
 
 #### In Visual Studio Code:
 - Utilize MSVC compiler by downloading Visual Studio 2022
