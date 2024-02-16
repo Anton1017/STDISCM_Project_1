@@ -3,6 +3,9 @@
 - Extract the folders of the libraries in the project directory
 
 ### There are two ways to build the program:
+#### In Visual Studio (2022)
+-
+
 #### In Visual Studio Code:
 - Install C++ from the MinGW-w64 toolchain and configure the necessary environmental variables
 - Run the following code in the project directory:
