@@ -73,17 +73,17 @@ float calculateSlope(ImVec2 p1, ImVec2 p2) {
 }
 
 bool doIntersect(ImVec2 p1, ImVec2 q1, ImVec2 p2, ImVec2 q2) {
-    // Calculate slopes of the line and particle traj.
+    // Calculate slopes of the line and particle trajectory.
     float slope1 = calculateSlope(p1, q1);
     float slope2 = calculateSlope(p2, q2);
 
     // Check for vertical lines
     if (std::isinf(slope1) && std::isinf(slope2)) {
-        // Both line and particle traj. are vertical and never intersect
+        // Both line and particle trajectory are vertical and never intersect
         return false;
     }
 
-    // Calculate y-intercepts (b values) for each line
+    // Calculate y-intercepts (b) for each line
     float b1 = p1.y - slope1 * p1.x;
     float b2 = p2.y - slope2 * p2.x;
 
@@ -96,7 +96,7 @@ bool doIntersect(ImVec2 p1, ImVec2 q1, ImVec2 p2, ImVec2 q2) {
         intersectionX = p1.x;
         intersectionY = slope2 * intersectionX + b2;
     } else if (std::isinf(slope2)) {
-        // Particle traj. is vertical
+        // Particle trajectory is vertical
         intersectionX = p2.x;
         intersectionY = slope1 * intersectionX + b1;
     } else {
@@ -105,7 +105,7 @@ bool doIntersect(ImVec2 p1, ImVec2 q1, ImVec2 p2, ImVec2 q2) {
         intersectionY = slope1 * intersectionX + b1;
     }
 
-    // Check if the intersection point lies on both line and particle traj.
+    // Check if the intersection point lies on both line and particle trajectory
     if (!std::isnan(intersectionX) && !std::isnan(intersectionY) &&
         (intersectionX >= std::min(p1.x, q1.x) && intersectionX <= std::max(p1.x, q1.x)) &&
         (intersectionY >= std::min(p1.y, q1.y) && intersectionY <= std::max(p1.y, q1.y)) &&
@@ -146,7 +146,6 @@ std::vector<std::pair<int,int>> getJobList() {
                 jobList.push_back(std::pair(i,j));
                 particlesSize = 0;
             }
-            
         }
     } else{
         int jobRemainder = particlesSize % THREADPOOL_SIZE;
@@ -299,7 +298,7 @@ int main() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        // ImGui::ShowDemoWindow(); // Show demo window! :)
+        // ImGui::ShowDemoWindow();
 
         double currentTime = glfwGetTime();
 
@@ -310,7 +309,7 @@ int main() {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("Framerate", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-        if (currentTime - lastDisplayTime >= 0.5) { //0.5s
+        if (currentTime - lastDisplayTime >= 0.5) { //every 0.5 secpmds
             currentFramerate = io.Framerate;
             // std::cout << "Framerate: " << currentFramerate << " FPS" << std::endl;
             lastDisplayTime = currentTime;
@@ -478,7 +477,7 @@ int main() {
         ImGui::SetNextWindowSize(ImVec2(1280, ImGui::GetIO().DisplaySize.y - 720));
         ImGui::SetNextWindowPos(ImVec2(0, 721));
         ImGui::Begin("Wall Parameters");
-        //Parameters for wall
+        //Parameters for wall, endpoints for the twopoints
         static int wall_x1 = 1;
         static int wall_y1 = 1;
         static int wall_x2 = 1;
